@@ -1,0 +1,35 @@
+{
+  "training_date": "2025-10-14T10:25:12.421192",
+  "models_trained": [
+    "career_model",
+    "personality_model",
+    "vectorizer",
+    "skill_extractor",
+    "skill_gap_predictor",
+    "confidence_scorer",
+    "resume_classifier"
+  ],
+  "datasets_used": {
+    "career_dataset": [
+      10,
+      9
+    ],
+    "skills_dataset": [
+      25,
+      5
+    ],
+    "personality_dataset": [
+      8675,
+      2
+    ],
+    "market_dataset": [
+      20,
+      7
+    ],
+    "resume_dataset": [
+      2484,
+      4
+    ]
+  },
+  "model_performance": {}
+}
