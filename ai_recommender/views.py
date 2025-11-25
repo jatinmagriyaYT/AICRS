@@ -662,22 +662,35 @@ def job_trends(request):
     return render(request, 'trends.html', context)
 
 @login_required
+@login_required
 def skill_gap_analysis(request):
-    """Skill gap analysis view"""
+    """Skill gap analysis view - FIXED VERSION"""
     profile = request.user.userprofile
-    user_skills = SkillAssessment.objects.filter(user_profile=profile)
+    
+    # Get user skills from both SkillAssessment model and profile
+    user_skills_from_assessment = SkillAssessment.objects.filter(user_profile=profile)
+    user_skills_list = [skill.skill_name for skill in user_skills_from_assessment]
+    
+    # Also include skills from profile
+    if profile.skills:
+        profile_skills = [skill.strip() for skill in profile.skills.split(',') if skill.strip()]
+        user_skills_list.extend(profile_skills)
+    
+    # Remove duplicates
+    user_skills_list = list(set(user_skills_list))
+    user_skills_text = ', '.join(user_skills_list)
     
     target_career_title = request.POST.get('target_career')
     skill_gaps = {}
     
     if target_career_title:
-        user_skills_text = ', '.join([skill.skill_name for skill in user_skills])
         skill_gaps = predict_skill_gaps(user_skills_text, target_career_title)
         
     return render(request, 'skill_gap_analysis.html', {
-        'careers': CAREER_DF['career_name'].unique().tolist(),
-        'user_skills': user_skills,
-        'skill_gaps': skill_gaps
+        'careers': CAREER_DF['career_name'].unique().tolist() if not CAREER_DF.empty else [],
+        'user_skills': user_skills_from_assessment,
+        'skill_gaps': skill_gaps,
+        'target_career': target_career_title
     })
 
 def chatbot(request):
@@ -875,42 +888,47 @@ def get_career_recommendations(personality_type, scores):
 # --- CAREER MATCHING FUNCTIONS ---
 
 def find_career_matches(user_profile):
-    """Core recommendation logic combining Cosine Similarity, Skills, and Experience"""
+    """Core recommendation logic with 60% Skills + 40% Personality weighting"""
     
     user_skills_text = user_profile.get('skills', '')
-    profile_text = f"{user_profile.get('education_level', '')} {user_profile.get('interests', '')} {user_skills_text}"
+    personality_type = user_profile.get('personality_type', '')
     
     if not models_loaded or not user_skills_text.strip() or len(CAREER_DF) == 0:
         return simple_match_fallback(user_profile)
 
-    user_vector = VECTORIZER.transform([profile_text])
-    similarity_scores = cosine_similarity(user_vector, CAREER_VECTORS).flatten()
-    
-    ranked_indices = np.argsort(similarity_scores)[::-1]
     matches = []
     
-    for index in ranked_indices:
-        career = CAREER_DF.iloc[index]
-        base_score = similarity_scores[index] * 100
+    # Parse user skills
+    user_skills_set = set([s.strip().lower() for s in user_skills_text.split(',') if s.strip()])
+    
+    for index, career in CAREER_DF.iterrows():
+        # --- 1. SKILLS SCORE (60% weight) ---
+        skills_score = calculate_detailed_skills_score(user_skills_set, career, user_profile)
         
-        career_merge_key = career['clean_key']
-        market_info = MARKET_DF[MARKET_DF['clean_key'] == career_merge_key].head(1)
+        # --- 2. PERSONALITY SCORE (40% weight) ---
+        personality_score = calculate_detailed_personality_score(personality_type, career)
         
-        market_boost = 0
-        if not market_info.empty:
-            growth_rate = market_info['job_growth_rate'].iloc[0]
-            if not pd.isna(growth_rate):
-                market_boost = float(growth_rate) * 50
+        # --- 3. WEIGHTED FINAL SCORE ---
+        weighted_score = (skills_score * 0.60) + (personality_score * 0.40)
         
-        experience_bonus = 1.10 if user_profile.get('experience_years', 0) >= 3 else 1.0
+        # --- 4. EXPERIENCE MULTIPLIER (up to 1.15x) ---
+        experience_years = user_profile.get('experience_years', 0)
+        experience_multiplier = min(1.15, 1.0 + (experience_years * 0.02))  # +2% per year, max 15%
         
-        final_score = max(0, min(100, base_score + market_boost)) * experience_bonus
+        # --- 5. MARKET DEMAND BOOST (up to +8 points) ---
+        market_boost = calculate_realistic_market_boost(career)
+        
+        # --- 6. CALCULATE FINAL SCORE ---
+        final_score = (weighted_score * experience_multiplier) + market_boost
+        final_score = max(45, min(98, final_score))  # Realistic range: 45-98%
         
         matches.append({
             'career_id': career.get('career_id', index),
             'title': career['career_name'], 
-            'match_score': round(final_score, 2),
+            'match_score': round(final_score, 1),
             'description': career.get('description', 'No description available')[:150] + '...',
+            'skills_contribution': round(skills_score * 0.60, 1),
+            'personality_contribution': round(personality_score * 0.40, 1),
         })
         
         if len(matches) >= 100: 
@@ -971,24 +989,71 @@ def simple_match_fallback(user_profile):
     return sorted(matches, key=lambda x: x['match_score'], reverse=True)[:10]
 
 def predict_skill_gaps(user_skills, target_career):
-    """Predict skill gaps for a target career"""
+    """Predict skill gaps for a target career - FIXED VERSION"""
     if target_career not in CAREER_DF['career_name'].values: 
-        return {'gap_score': 1.0, 'missing_skills': []}
+        return {
+            'gap_score': 1.0, 
+            'missing_skills': [],
+            'required_skills': [],
+            'current_skills': [],
+            'required_skills_count': 0,
+            'current_skills_count': 0,
+            'missing_skills_count': 0,
+            'coverage_percentage': 0
+        }
 
     career_info = CAREER_DF[CAREER_DF['career_name'] == target_career].iloc[0]
-    required_skills = set(career_info.get('required_skills', '').lower().split(','))
+    
+    # Get required skills and clean them
+    required_skills_raw = career_info.get('required_skills', '')
+    if pd.isna(required_skills_raw):
+        required_skills_raw = ''
+    
+    required_skills = set()
+    if required_skills_raw:
+        # Split by comma and clean each skill
+        for skill in str(required_skills_raw).split(','):
+            cleaned_skill = skill.strip()
+            if cleaned_skill:
+                required_skills.add(cleaned_skill.lower())
 
-    user_skills_set = set(user_skills.lower().split(', ')) if user_skills else set()
+    # Get user skills and clean them
+    user_skills_set = set()
+    if user_skills:
+        for skill in user_skills.split(','):
+            cleaned_skill = skill.strip()
+            if cleaned_skill:
+                user_skills_set.add(cleaned_skill.lower())
 
+    # Find matching skills (skills user has that are required)
+    matching_skills = required_skills.intersection(user_skills_set)
+    
+    # Find missing skills (skills required but user doesn't have)
     missing_skills = required_skills - user_skills_set
 
-    gap_score = len(missing_skills) / len(required_skills) if required_skills else 0
+    # Calculate metrics
+    required_skills_count = len(required_skills)
+    current_skills_count = len(matching_skills)
+    missing_skills_count = len(missing_skills)
+    
+    gap_score = missing_skills_count / required_skills_count if required_skills_count > 0 else 0
+    coverage_percentage = (current_skills_count / required_skills_count * 100) if required_skills_count > 0 else 0
+
+    # Convert sets to lists of dictionaries for template
+    required_skills_list = [{'name': skill.title()} for skill in required_skills]
+    current_skills_list = [{'name': skill.title()} for skill in matching_skills]
+    missing_skills_list = [{'name': skill.title()} for skill in missing_skills]
 
     return {
-        'missing_skills': list(missing_skills),
+        'required_skills': required_skills_list,
+        'current_skills': current_skills_list,
+        'missing_skills': missing_skills_list,
         'gap_score': round(gap_score, 2),
+        'required_skills_count': required_skills_count,
+        'current_skills_count': current_skills_count,
+        'missing_skills_count': missing_skills_count,
+        'coverage_percentage': round(coverage_percentage, 1)
     }
-
 # --- MARKET DATA ENHANCEMENT FUNCTIONS ---
 
 def enhance_recommendation_with_market_data(recommendation):
