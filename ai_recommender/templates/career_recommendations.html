@@ -1,8 +1,3 @@
-
-
-
-
-
 {% load static %}
 {% include "logo.html" %}
 <!DOCTYPE html>
@@ -27,7 +22,6 @@
             --text-primary: #333333;
             --text-secondary: #6C757D;
             --gradient-primary: linear-gradient(135deg, #8B5FBF 0%, #6A4C93 100%);
-            --gradient-secondary: linear-gradient(135deg, #D4A5A5 0%, #C89595 100%);
             --gradient-success: linear-gradient(135deg, #06D6A0 0%, #04B588 100%);
             --gradient-warning: linear-gradient(135deg, #FFD166 0%, #FFC145 100%);
             --gradient-info: linear-gradient(135deg, #118AB2 0%, #0A6E8F 100%);
@@ -54,6 +48,7 @@
             padding: 30px;
         }
 
+        /* --- Header Styling --- */
         .header-section {
             text-align: center;
             margin-bottom: 50px;
@@ -137,6 +132,7 @@
             color: var(--text-secondary);
         }
 
+        /* --- Grid & Card Styling --- */
         .recommendations-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -159,6 +155,7 @@
             box-shadow: var(--hover-shadow);
         }
 
+        /* Default Top Border */
         .career-card::before {
             content: '';
             position: absolute;
@@ -166,8 +163,13 @@
             left: 0;
             right: 0;
             height: 5px;
-            background: var(--gradient-primary);
+            background: var(--gradient-primary); 
         }
+        
+        /* Match Score Coloring Overrides */
+        .career-card.match-high::before { background: var(--gradient-success); }
+        .career-card.match-medium::before { background: var(--gradient-info); }
+        .career-card.match-low::before { background: var(--gradient-warning); }
 
         .card-header {
             padding: 25px 25px 20px;
@@ -207,6 +209,11 @@
             box-shadow: 0 4px 10px rgba(6, 214, 160, 0.3);
         }
 
+        /* Dynamic Score Colors */
+        .match-high .match-score { background: var(--gradient-success); box-shadow: 0 4px 10px rgba(6, 214, 160, 0.3); }
+        .match-medium .match-score { background: var(--gradient-info); box-shadow: 0 4px 10px rgba(17, 138, 178, 0.3); }
+        .match-low .match-score { background: var(--gradient-warning); box-shadow: 0 4px 10px rgba(255, 209, 102, 0.3); }
+
         .card-body {
             padding: 20px 25px;
         }
@@ -245,21 +252,10 @@
             margin-bottom: 8px;
         }
 
-        .salary .detail-icon {
-            color: var(--success);
-        }
-
-        .growth .detail-icon {
-            color: var(--info);
-        }
-
-        .education .detail-icon {
-            color: var(--warning);
-        }
-
-        .demand .detail-icon {
-            color: var(--danger);
-        }
+        .salary .detail-icon { color: var(--success); }
+        .growth .detail-icon { color: var(--info); }
+        .education .detail-icon { color: var(--warning); }
+        .demand .detail-icon { color: var(--danger); }
 
         .detail-label {
             color: var(--text-secondary);
@@ -275,17 +271,9 @@
             font-size: 1.1rem;
         }
 
-        .demand-high {
-            color: var(--success);
-        }
-
-        .demand-medium {
-            color: var(--warning);
-        }
-
-        .demand-low {
-            color: var(--danger);
-        }
+        .demand-high { color: var(--success); font-weight: 700; }
+        .demand-medium { color: var(--info); font-weight: 700; }
+        .demand-low { color: var(--warning); font-weight: 700; }
 
         .card-footer {
             padding: 20px 25px;
@@ -299,6 +287,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            max-width: 60%;
         }
 
         .skill-tag {
@@ -344,6 +333,7 @@
             transform: translateX(3px);
         }
 
+        /* --- Fallback/Error Styling --- */
         .no-recommendations {
             text-align: center;
             padding: 60px 30px;
@@ -459,51 +449,23 @@
             margin-right: 8px;
         }
 
+        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .header-card {
-                padding: 30px 20px;
-            }
-            
-            .header-card h1 {
-                font-size: 2.2rem;
-            }
-            
-            .recommendations-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-bar {
-                gap: 15px;
-            }
-            
-            .stat-item {
-                padding: 12px 18px;
-            }
-            
-            .card-footer {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .action-btn {
-                width: 100%;
-                justify-content: center;
-            }
+            .container { padding: 20px; }
+            .header-card { padding: 30px 20px; }
+            .header-card h1 { font-size: 2.2rem; }
+            .recommendations-grid { grid-template-columns: 1fr; }
+            .stats-bar { gap: 15px; }
+            .stat-item { padding: 12px 18px; }
+            .card-footer { flex-direction: column; gap: 15px; align-items: flex-start; }
+            .action-buttons { flex-direction: column; }
+            .action-btn { width: 100%; justify-content: center; }
+            .skills-tags { max-width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- BACK BUTTON -->
         <div class="back-button">
             <a href="{% url 'dashboard' %}">
                 <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -529,17 +491,7 @@
                         <div class="stat-label">Avg. Match Score</div>
                     </div>
                     <div class="stat-item">
-                        <!-- CALCULATE HIGH DEMAND DIRECTLY IN TEMPLATE -->
-                        <div class="stat-value">
-                            {% with high_demand_count=0 %}
-                                {% for recommendation in recommendations %}
-                                    {% if recommendation.market_data.demand_level == 'High' %}
-                                        {% with high_demand_count=high_demand_count|add:1 %}{% endwith %}
-                                    {% endif %}
-                                {% endfor %}
-                                {{ high_demand_count }}
-                            {% endwith %}
-                        </div>
+                        <div class="stat-value">{{ high_demand_roles }}</div>
                         <div class="stat-label">High-Demand Roles</div>
                     </div>
                 </div>
@@ -556,83 +508,81 @@
         {% if recommendations %}
             <div class="recommendations-grid">
                 {% for recommendation in recommendations %}
-                    <div class="career-card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="career-title">{{ recommendation.recommended_career.title }}</h3>
-                                <div class="career-category">
-                                    <i class="fas fa-tag"></i>
-                                    {{ recommendation.recommended_career.category|default:"Technology" }}
+                    {% with market=recommendation.market_data %}
+                        
+                        <div class="career-card 
+                            {% if recommendation.match_score >= 80 %}match-high
+                            {% elif recommendation.match_score >= 60 %}match-medium
+                            {% else %}match-low{% endif %}">
+                            
+                            <div class="card-header">
+                                <div>
+                                    <h3 class="career-title">{{ recommendation.recommended_career.title }}</h3>
+                                    <div class="career-category">
+                                        <i class="fas fa-tag"></i>
+                                        {{ recommendation.recommended_career.category|default:"Technology" }}
+                                    </div>
                                 </div>
+                                <span class="match-score">{{ recommendation.match_score }}% Match</span>
                             </div>
-                            <span class="match-score">{{ recommendation.match_score }}% Match</span>
-                        </div>
 
-                        <div class="card-body">
-                            <div class="career-description">
-                                {{ recommendation.recommended_career.description|default:"No description available" }}
-                            </div>
+                            <div class="card-body">
+                                <div class="career-description">
+                                    {{ recommendation.recommended_career.description|default:"No description available"|truncatechars:180 }}
+                                </div>
 
-                            <div class="career-details">
-                                <!-- SALARY - FROM MARKET DATA -->
-                                <div class="detail-item salary">
-                                    <i class="fas fa-dollar-sign detail-icon"></i>
-                                    <div class="detail-label">Avg. Salary</div>
-                                    <div class="detail-value">${{ recommendation.market_data.salary|default:"85,000" }}</div>
-                                </div>
-                                
-                                <!-- GROWTH RATE - FROM MARKET DATA -->
-                                <div class="detail-item growth">
-                                    <i class="fas fa-chart-line detail-icon"></i>
-                                    <div class="detail-label">Growth Rate</div>
-                                    <div class="detail-value">{{ recommendation.market_data.growth_rate|default:"8.5" }}%</div>
-                                </div>
-                                
-                                <!-- EDUCATION - FROM CAREER MODEL -->
-                                <div class="detail-item education">
-                                    <i class="fas fa-graduation-cap detail-icon"></i>
-                                    <div class="detail-label">Education</div>
-                                    <div class="detail-value">{{ recommendation.recommended_career.education_required|default:"Bachelor's" }}</div>
-                                </div>
-                                
-                                <!-- DEMAND - FROM MARKET DATA -->
-                                <div class="detail-item demand">
-                                    <i class="fas fa-bolt detail-icon"></i>
-                                    <div class="detail-label">Demand</div>
-                                    <div class="detail-value demand-{{ recommendation.market_data.demand_level|default:'medium'|lower }}">
-                                        {{ recommendation.market_data.demand_level|default:"Medium" }}
+                                <div class="career-details">
+                                    <div class="detail-item salary">
+                                        <i class="fas fa-dollar-sign detail-icon"></i>
+                                        <div class="detail-label">Avg. Salary</div>
+                                        <div class="detail-value">${{ market.salary|default:"85,000" }}</div>
+                                    </div>
+                                    
+                                    <div class="detail-item growth">
+                                        <i class="fas fa-chart-line detail-icon"></i>
+                                        <div class="detail-label">Growth Rate</div>
+                                        <div class="detail-value">{{ market.growth_rate|default:"8.5" }}%</div>
+                                    </div>
+                                    
+                                    <div class="detail-item education">
+                                        <i class="fas fa-graduation-cap detail-icon"></i>
+                                        <div class="detail-label">Education</div>
+                                        <div class="detail-value">{{ recommendation.recommended_career.education_required|default:"Bachelor's" }}</div>
+                                    </div>
+                                    
+                                    <div class="detail-item demand">
+                                        <i class="fas fa-bolt detail-icon"></i>
+                                        <div class="detail-label">Demand</div>
+                                        <div class="detail-value demand-{{ market.demand_level|default:'medium'|lower }}">
+                                            {{ market.demand_level|default:"Medium" }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="card-footer">
-                            <div class="skills-tags">
-                                <!-- FIXED: Manual skills splitting without split filter -->
-                                {% with recommendation.recommended_career.required_skills|default:"Python,SQL,Communication" as skills_string %}
-                                    {% with skills_string|slice:":50" as skills %}
-                                        {% if "," in skills %}
-                                            {% for skill in skills.split %}
-                                                {% if forloop.counter0 < 3 %}
-                                                    <span class="skill-tag">{{ skill|cut:","|truncatechars:15 }}</span>
-                                                {% endif %}
+                            <div class="card-footer">
+                                <div class="skills-tags">
+                                    {% with recommendation.recommended_career.required_skills as skills_string %}
+                                        {% if skills_string %}
+                                            {% comment %} Splitting strictly by comma and limiting display {% endcomment %}
+                                            {% for skill_char in "x"|rjust:"3" %} 
+                                                {# Hack to loop 3 times is hard in pure templates without custom filters, so we just use the first few items blindly if possible or just display text #}
                                             {% endfor %}
-                                            {% if skills.split|length > 3 %}
-                                                <span class="skill-tag">+{{ skills.split|length|add:"-3" }} more</span>
-                                            {% endif %}
+                                            
+                                            {# Display full skills truncated or first few manually if split isn't available. #}
+                                            <span class="skill-tag" title="{{ skills_string }}">{{ skills_string|truncatechars:40 }}</span>
                                         {% else %}
-                                            <span class="skill-tag">{{ skills|truncatechars:20 }}</span>
                                             <span class="skill-tag">Analytical</span>
                                             <span class="skill-tag">Problem Solving</span>
                                         {% endif %}
                                     {% endwith %}
-                                {% endwith %}
+                                </div>
+                                <a href="{% url 'career_detail' recommendation.recommended_career.id %}" class="view-details-btn">
+                                    View Details <i class="fas fa-arrow-right"></i>
+                                </a>
                             </div>
-                            <a href="{% url 'career_detail' recommendation.recommended_career.id %}" class="view-details-btn">
-                                View Details <i class="fas fa-arrow-right"></i>
-                            </a>
                         </div>
-                    </div>
+                    {% endwith %}
                 {% endfor %}
             </div>
         {% else %}
@@ -653,12 +603,14 @@
     </div>
 
     <script>
-        // Add demand level color coding
         document.addEventListener('DOMContentLoaded', function() {
+            // Function to handle dynamic coloring based on demand level
             const demandElements = document.querySelectorAll('.detail-item.demand .detail-value');
             
             demandElements.forEach(element => {
                 const demandLevel = element.textContent.trim().toLowerCase();
+                
+                // Reset classes first
                 element.className = 'detail-value';
                 
                 if (demandLevel === 'high') {
@@ -668,7 +620,7 @@
                 } else if (demandLevel === 'low') {
                     element.classList.add('demand-low');
                 } else {
-                    element.classList.add('demand-medium'); // Default
+                    element.classList.add('demand-medium'); 
                 }
             });
         });

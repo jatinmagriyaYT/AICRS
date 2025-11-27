@@ -872,7 +872,7 @@
  {% comment %} =================================================================== {% endcomment %}
  {% comment %} =================================================================== {% endcomment %}
  {% comment %} =================================================================== {% endcomment %}
-<!DOCTYPE html>
+{% comment %} <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1299,5 +1299,258 @@
             }
         });
     </script>
+</body>
+</html> {% endcomment %}
+
+
+{% comment %} =================================================================================== {% endcomment %}
+{% comment %} =================================================================================== {% endcomment %}
+{% comment %} =================================================================================== {% endcomment %}
+{% comment %} =================================================================================== {% endcomment %}
+{% comment %} =================================================================================== {% endcomment %}
+{% comment %} =================================================================================== {% endcomment %}
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — AI Career Guide</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet" />
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.0.10/build/spline-viewer.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: url('https://jitechno.com/assets/images/slider/slide1.jpg') center/cover no-repeat;
+      position: relative;
+      color: #ffffff;
+      height: 100vh;
+      overflow: hidden; /* Scroll band kar diya taaki animation center me rahe */
+    }
+
+    /* FULL BACKGROUND BLUR */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: url('https://jitechno.com/assets/images/slider/slide1.jpg') center/cover no-repeat;
+      filter: blur(22px) brightness(0.55) saturate(1.2);
+      transform: scale(1.08);
+      z-index: -1;
+    }
+
+    /* NAVBAR */
+    header.glass-nav {
+        width: 100%;
+        max-width: 1250px;
+        margin: 20px auto;
+        padding: 18px 26px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        z-index: 100;
+        position: relative;
+    }
+    .nav-logo { font-size: 24px; font-weight: 800; color: #38bdf8; letter-spacing: 0.5px; }
+    .nav-links { display: flex; gap: 18px; align-items: center; }
+    .nav-btn { text-decoration: none; font-weight: 500; font-size: 15px; padding: 8px 14px; border-radius: 10px; }
+    .btn-glass { color: white; background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.15); }
+    .btn-active { color: #001020; font-weight: 600; background: #38bdf8; border: 1px solid #38bdf8; }
+
+    /* --- ORBIT SYSTEM CONTAINER --- */
+    .orbit-container {
+      position: absolute;
+      top: 55%; /* Screen ke center se thoda neeche */
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; /* Ye decide karega ki circle kitna bada hai */
+      height: 800px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* CENTER STATIC MODEL */
+    .center-model {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.15);
+      z-index: 10;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .center-model spline-viewer {
+        width: 100%; height: 100%; transform: scale(1.2);
+    }
+
+    /* THE ROTATING RING (Track) */
+    .orbit-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      /* Animation: Spin Right (Clockwise) */
+      animation: spin-right 25s linear infinite; 
+    }
+
+    /* PAUSE ON HOVER (Optional - User Experience ke liye) */
+    .orbit-container:hover .orbit-ring,
+    .orbit-container:hover .orbit-item {
+        animation-play-state: paused;
+    }
+
+    /* INDIVIDUAL CARDS (Items) */
+    .orbit-item {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.4); /* Thoda dark kiya taaki text dikhe */
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(25px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      
+      /* IMPORTANT: Counter Rotation (Spin Left) */
+      /* Jitna time ring lega (25s), utna hi time isko dena padega ulta ghumne me */
+      animation: spin-left 25s linear infinite;
+    }
+
+    /* Positioning Items Equally (Top, Right, Bottom, Left) */
+    
+    /* 1. TOP */
+    .pos-1 { top: 0; left: 50%; transform: translate(-50%, -50%); }
+    
+    /* 2. RIGHT */
+    .pos-2 { top: 50%; right: 0; transform: translate(50%, -50%); }
+    
+    /* 3. BOTTOM */
+    .pos-3 { bottom: 0; left: 50%; transform: translate(-50%, 50%); }
+    
+    /* 4. LEFT */
+    .pos-4 { top: 50%; left: 0; transform: translate(-50%, -50%); }
+
+
+    /* TEXT STYLES */
+    h2 { font-size: 16px; color: #38bdf8; margin-bottom: 5px; font-weight: 700; }
+    p { font-size: 11px; color: #ddd; line-height: 1.4; }
+
+
+    /* --- KEYFRAMES (Animation Logic) --- */
+    
+    /* Ring ghoomega Clockwise (0 se 360) */
+    @keyframes spin-right {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Items ghoomenge Counter-Clockwise (0 se -360) 
+       Isse wo apni jagah par seedhe dikhenge */
+    @keyframes spin-left {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(-360deg); }
+    }
+    
+    /* NOTE: Right aur Bottom items ke liye translate alag hai, 
+       isliye unke liye alag keyframes banane padenge ya common logic lagana padega.
+       Easy fix ke liye main sabko center-origin se set kar raha hu:
+    */
+
+    /* Behtar Tarika (Rotate fix for all positions) */
+    .pos-1 { top: 0; left: 50%; margin-top: -130px; margin-left: -130px; transform: none; } 
+    /* margin = width/2 so center aligns perfectly on line */
+
+    /* Re-writing positions using margins to avoid transform conflict */
+    .orbit-item {
+        transform-origin: center center;
+        margin: 0;
+        /* Reset transform from class rules above */
+        transform: rotate(0deg); 
+        animation: keep-upright 25s linear infinite;
+    }
+    
+    /* Final Positions on the Circle Border */
+    .pos-1 { top: 0; left: 50%; margin-left: -130px; margin-top: -130px; } /* Top Center */
+    .pos-2 { top: 50%; right: 0; margin-top: -130px; margin-right: -130px;} /* Right Center */
+    .pos-3 { bottom: 0; left: 50%; margin-left: -130px; margin-bottom: -130px;} /* Bottom Center */
+    .pos-4 { top: 50%; left: 0; margin-top: -130px; margin-left: -130px;} /* Left Center */
+
+    @keyframes keep-upright {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(-360deg); }
+    }
+
+  </style>
+</head>
+<body>
+
+  <header class="glass-nav">
+    <div class="nav-logo">AI Career Guide</div>
+    <nav class="nav-links">
+      <a href="#" class="nav-btn btn-glass">Home</a>
+      <a href="#" class="nav-btn btn-active">About</a>
+      <a href="#" class="nav-btn btn-glass">Recs</a>
+      <a href="#" class="nav-btn btn-glass">Contact</a>
+    </nav>
+  </header>
+
+  <div class="orbit-container">
+    
+    <div class="center-model">
+       <spline-viewer url="https://prod.spline.design/g-95OinkkL5Z3X6D/scene.splinecode"></spline-viewer>
+    </div>
+
+    <div class="orbit-ring">
+      
+      <div class="orbit-item pos-1">
+        <h2>🎯 Overview</h2>
+        <p>AI System analyzes academic performance & interests to find your perfect career path.</p>
+      </div>
+
+      <div class="orbit-item pos-2">
+        <h2>✨ Features</h2>
+        <p>• Resume Analyzer<br>• Skill Roadmap<br>• Market Insights<br>• Personality Mapping</p>
+      </div>
+
+      <div class="orbit-item pos-3">
+        <h2>📌 Goal & Team</h2>
+        <p>Providing career clarity through AI.</p>
+        <p style="color:#38bdf8; font-weight:600; margin-top:4px;">Jatin • Jay • Kartik • Nitin</p>
+      </div>
+
+      <div class="orbit-item pos-4">
+        <h2>🛠 Tech Stack</h2>
+        <p><b>Backend:</b> Django, Python<br><b>AI:</b> scikit-learn, spaCy<br><b>DB:</b> SQLite3</p>
+      </div>
+
+    </div>
+  </div>
+
 </body>
 </html>
