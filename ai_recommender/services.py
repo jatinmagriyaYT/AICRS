@@ -155,31 +155,8 @@ def analyze_resume_file(resume_file):
         if not text.strip():
             return {'error': 'No text could be extracted from the file'}
 
-        # Prepare text for skill matching (allows C++, C#, etc.)
-        text_for_skills = text.lower()
-        text_for_skills = re.sub(r'http\S+|www\S+|[0-9]+', ' ', text_for_skills, flags=re.MULTILINE)
-        text_for_skills = re.sub(r'[^\w\s\+\.\#\-]', ' ', text_for_skills) # Keep C++, C#, .NET etc.
-
-        skills_found = set()
-        analysis_method = 'enhanced_rule_match'
-        
-        # Use the clean, extracted skill list from the joblib file
-        if models_loaded and 'SKILL_LIST' in globals():
-            for skill_name in SKILL_LIST:
-                s = str(skill_name).strip().lower()
-                # Check for exact word match using regex boundary \b
-                pattern = r'\b' + re.escape(s) + r'\b'
-                if re.search(pattern, text_for_skills):
-                    skills_found.add(s)
-        else:
-            # Fallback hardcoded list (used if ML files are missing)
-            analysis_method = 'keyword_fallback'
-            for s in ['python','java','javascript','sql','html','css','react.js','node.js','django','flask','machine learning','data analysis']:
-                if s in text_for_skills:
-                    skills_found.add(s)
-
-        # Clean and normalize skills (converts 'python' to 'Python', 'c++' to 'C++')
-        skills_clean = clean_skill_list(list(skills_found))
+        # Use the new robust extraction function
+        skills_clean = extract_skills_from_text(text)
 
         experience_years = 0
         matches = re.findall(r'(\d+)\s*(?:year|yr|years|yrs)\s*(?:of)?\s*(?:exp|experience)', text, re.IGNORECASE)
@@ -189,12 +166,100 @@ def analyze_resume_file(resume_file):
         return {
             'skills': skills_clean,
             'experience_years': experience_years,
-            'analysis_method': analysis_method
+            'analysis_method': 'enhanced_rule_match'
         }
     except Exception as e:
         import traceback
         traceback.print_exc()
         return {'error': f'Analysis error: {str(e)}'}
+
+# --- SKILL EXTRACTION LOGIC ---
+
+def extract_skills_from_text(text):
+    """
+    Robust skill extraction using a combination of ML skill list (if available)
+    and a comprehensive static fallback list.
+    """
+    if not text:
+        return []
+        
+    # 1. Preprocess text
+    text_lower = text.lower()
+    # Replace common separators with spaces to ensure boundaries
+    text_clean = re.sub(r'[,/()\[\]]', ' ', text_lower)
+    # Keep only allowed characters for skills (alphanumeric, +, #, ., -)
+    # We allow space inside skills, but we'll match against known phrases
+    
+    skills_found = set()
+    
+    # 2. Define Comprehensive Static Skill List (The "Black Box" Fix)
+    # This ensures we catch skills even if the ML model misses them
+    STATIC_SKILLS = {
+        # Languages
+        'python', 'java', 'c++', 'c#', 'javascript', 'typescript', 'php', 'ruby', 'swift', 'kotlin', 'go', 'rust', 'scala', 'r', 'matlab', 'dart', 'lua', 'perl', 'objective-c', 'assembly', 'vba',
+        # Web Frontend
+        'html', 'css', 'html5', 'css3', 'react', 'react.js', 'angular', 'vue', 'vue.js', 'svelte', 'jquery', 'bootstrap', 'tailwind', 'sass', 'less', 'webpack', 'babel',
+        # Web Backend
+        'django', 'flask', 'fastapi', 'node.js', 'express.js', 'spring', 'spring boot', 'laravel', 'rails', 'asp.net', 'flet', 'tkinter',
+        # Mobile
+        'flutter', 'react native', 'android', 'ios', 'xamarin', 'ionic',
+        # Data Science & ML
+        'machine learning', 'deep learning', 'data analysis', 'data science', 'pandas', 'numpy', 'scikit-learn', 'tensorflow', 'pytorch', 'keras', 'opencv', 'nlp', 'computer vision', 'matplotlib', 'seaborn', 'plotly', 'jupyter',
+        # Databases
+        'sql', 'mysql', 'postgresql', 'sqlite', 'sqlite3', 'mongodb', 'redis', 'cassandra', 'oracle', 'sql server', 'sqlalchemy', 'firebase', 'dynamodb',
+        # DevOps & Cloud
+        'git', 'github', 'gitlab', 'docker', 'kubernetes', 'jenkins', 'aws', 'amazon web services', 'azure', 'microsoft azure', 'google cloud', 'gcp', 'terraform', 'ansible', 'circleci', 'heroku', 'digitalocean',
+        # Tools & Others
+        'linux', 'bash', 'shell', 'jira', 'trello', 'slack', 'excel', 'power bi', 'tableau', 'figma', 'canva', 'photoshop', 'illustrator', 'premiere pro', 'automation', 'selenium', 'chatgpt', 'deepseek', 'llm', 'generative ai'
+    }
+    
+    # 3. Merge with ML list if available
+    search_list = STATIC_SKILLS.copy()
+    if models_loaded and 'SKILL_LIST' in globals():
+        # Add ML skills but filter out very short ones that cause noise
+        for s in SKILL_LIST:
+            s_str = str(s).strip().lower()
+            if len(s_str) > 2:
+                search_list.add(s_str)
+    
+    # 4. Perform Extraction
+    # We sort by length descending to match "Machine Learning" before "Learning"
+    sorted_skills = sorted(list(search_list), key=len, reverse=True)
+    
+    # Create a single regex pattern for efficiency? 
+    # No, for 1000+ skills, iterating might be safer to avoid regex complexity limits,
+    # but a compiled regex of joined terms is usually faster.
+    # Let's try direct substring search with boundary checks for accuracy.
+    
+    # Normalize text for search: add spaces around to help with boundaries
+    # But we need to preserve "c++" etc.
+    # Let's use a custom tokenizer approach or simple iteration with boundary check.
+    
+    # Simple iteration with boundary check
+    for skill in sorted_skills:
+        # Escape special chars like +, .
+        pattern = r'(?:^|[\s,./(\[])' + re.escape(skill) + r'(?:$|[\s,./)\]])'
+        if re.search(pattern, text_clean):
+            skills_found.add(skill)
+            
+    # 5. Special Handling for C / C++ / C#
+    # "C" is hard because it matches "C" in "Cloud", "Computer", etc.
+    # We only match "C" if it's "C Language", "C Programming", or in a list like "C, C++, Java"
+    if re.search(r'\bc\b', text_clean):
+        # Check context: "C," or ", C" or "C " followed by language/programming
+        if re.search(r'(?:^|[\s,])c(?:$|[\s,])', text_clean):
+             # Heuristic: if "C++" is there, "C" might be there too. 
+             # But often "C" just means "C". 
+             # Let's be conservative: Only add "C" if "C++" is NOT the only match, 
+             # or if it explicitly looks like a list.
+             # For now, let's add it but rely on clean_skill_list to maybe filter?
+             # Actually, clean_skill_list allows single letter 'c'.
+             # Let's check for "C Programming" or comma separated
+             if re.search(r'c\s+programming|language|developer', text_clean) or re.search(r',\s*c\s*,', text_clean):
+                 skills_found.add('c')
+    
+    # 6. Clean and Normalize
+    return clean_skill_list(list(skills_found))
 
 
 # --- PERSONALITY LOGIC ---
