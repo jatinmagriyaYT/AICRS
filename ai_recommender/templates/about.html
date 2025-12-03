@@ -67,17 +67,23 @@
       color:black;
     }
 
-    /* MAIN LAYOUT */
+    /* MAIN LAYOUT SCROLL FIX */
     .main{
       width:100%;
       padding:160px 60px 60px;
       display:flex;
       justify-content:space-between;
       gap:40px;
+
+      height:calc(100vh - 160px);  /* Viewport height minus header */
     }
 
+    /* LEFT SCROLLABLE CONTENT */
     .left{
       width:50%;
+      height:100%;
+      overflow-y:auto;
+      padding-right:10px;
     }
 
     .title{
@@ -98,6 +104,7 @@
       display:flex;
       flex-direction:column;
       gap:18px;
+      padding-bottom:50px;
     }
     .card{
       background:rgba(255,255,255,0.08);
@@ -122,13 +129,18 @@
       opacity:.9;
     }
 
-    /* RIGHT 3D MODEL AREA */
+    /* RIGHT 3D MODEL — FIXED/STICKY */
     .right{
       width:45%;
       height:480px;
+
+      position:sticky;
+      top:160px;
+
       display:flex;
       justify-content:center;
       align-items:center;
+
       overflow:hidden !important;
       border:none !important;
       background:transparent !important;
@@ -142,7 +154,7 @@
       background:transparent !important;
     }
 
-    /* REMOVE BUILT-WITH-SPLINE WATERMARK — FINAL FIX */
+    /* REMOVE SPLINE WATERMARK */
     spline-viewer::part(logo),
     spline-viewer::part(watermark),
     spline-viewer img[src*="spline"],
@@ -159,11 +171,14 @@
       .main{
         flex-direction:column;
         text-align:center;
+        height:auto;
       }
       .left, .right{
         width:100%;
       }
       .right{
+        position:relative;
+        top:0;
         height:360px;
       }
     }
@@ -178,46 +193,80 @@
     <a href="#">Home</a>
     <a class="active">About</a>
     <a href="#">Recommendations</a>
-    <a href="#">Contact</a>
+    <a href="/contact">Contact</a>
   </nav>
 </header>
 
 <section class="main">
 
-  <!-- LEFT SIDE -->
+  <!-- LEFT SIDE (SCROLLING CONTENT) -->
   <div class="left">
     <h1 class="title">About Our AI System</h1>
     <p class="subtitle">
-      Our intelligent engine analyzes skills, academic performance, interests and personality 
-      to recommend the most suitable career path.
+      A next-generation AI platform designed to analyze your skills, academics, interests 
+      and personality to provide accurate, personalized and industry-relevant career recommendations.
     </p>
 
     <div class="cards">
 
       <div class="card">
-        <h3>🎯 Overview</h3>
-        <p>AI evaluates your overall profile and selects accurate career fields.</p>
+        <h3>🎯 Project Overview</h3>
+        <p>
+          A complete AI-powered career guidance system that uses Machine Learning and NLP to 
+          analyze academic performance, technical skills, personality traits and resume data 
+          to recommend the best-fit career paths.
+        </p>
       </div>
 
       <div class="card">
-        <h3>✨ Features</h3>
-        <p>Resume analyzer, personality mapping, skill roadmap & market insights.</p>
+        <h3>❗ Problem We Solve</h3>
+        <p>
+          Students often struggle with deciding a career due to lack of guidance, awareness 
+          and clarity. Our system eliminates confusion by mapping your real skills to 
+          real industry opportunities.
+        </p>
       </div>
 
       <div class="card">
-        <h3>👨‍💻 Team</h3>
-        <p>Created by: Jatin • Jay • Kartik • Nitin</p>
+        <h3>🚀 What Our System Offers</h3>
+        <p>
+          Resume Analyzer • Skill Gap Analysis • Personalized Roadmaps • Job Market Trends • 
+          AI Chatbot • Personality Mapping • Interview Prep & More.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🧠 Software Engineering Approach</h3>
+        <p>
+          Built using the Incremental Model, enabling continuous module upgrades like 
+          Resume Parser, Recommender Engine, Personality Mapper and Learning Hub.
+        </p>
       </div>
 
       <div class="card">
         <h3>🛠 Tech Stack</h3>
-        <p>Django • Python • Machine Learning • scikit-learn • spaCy • SQLite</p>
+        <p>
+          Python • Django • scikit-learn • spaCy • ML/NLP • SQLite • HTML/CSS • JavaScript.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🎯 Expected Outcome</h3>
+        <p>
+          A fully functional AI Career Guidance System delivering personalized recommendations,
+          confidence scores, roadmaps, trends and continuous progress tracking.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>👨‍💻 Team</h3>
+        <p>Jatin • Jay • Kartik • Nitin</p>
       </div>
 
     </div>
   </div>
 
-  <!-- RIGHT SIDE 3D MODEL -->
+  <!-- RIGHT SIDE (FIXED 3D MODEL) -->
   <div class="right">
     <spline-viewer url="https://prod.spline.design/g-95OinkkL5Z3X6D/scene.splinecode"></spline-viewer>
   </div>
